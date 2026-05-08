@@ -1,6 +1,10 @@
 pipeline {
     agent any
     
+    environment {
+        SONAR_TOKEN = credentials('SONAR_TOKEN')
+    }
+    
     stages {
         stage('Checkout') {
             steps {
@@ -31,11 +35,27 @@ pipeline {
                 bat 'npm audit || exit /b 0'
             }
         }
-    }
-    
-    post {
-        always {
-            echo 'Pipeline execution completed.'
+        
+        stage('SonarCloud Analysis') {
+            steps {
+                script {
+                    def sonarScanner = tool name: 'SonarScanner', type: 'hudson.plugins.sonar.SonarRunnerInstallation'
+                    withSonarQubeEnv(installationName: 'SonarCloud', credentialsId: 'SONAR_TOKEN') {
+                        
+                        bat """
+                            cd nodejs-goof
+                            ${sonarScanner}/bin/sonar-scanner.bat ^
+                                -Dsonar.projectKey=TuyenKimHuynh_8.2CDevSecOps ^
+                                -Dsonar.organization=tuyenkimhuynh ^
+                                -Dsonar.host.url=https://sonarcloud.io ^
+                                -Dsonar.login=%SONAR_TOKEN% ^
+                                -Dsonar.sources=. ^
+                                -Dsonar.exclusions=node_modules/**,test/** ^
+                                -Dsonar.javascript.lcov.reportPaths=coverage/lcov.info
+                        """
+                    }
+                }
+            }
         }
     }
 }
