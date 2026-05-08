@@ -31,6 +31,22 @@ pipeline {
                 bat 'npm audit || exit /b 0'
             }
         }
+        stage('SonarCloud Analysis') {
+            steps {
+                withCredentials([string(credentialsId: 'SONAR_TOKEN', variable: 'SONAR_TOKEN')]) {
+                    bat """
+                        C:\\sonar-scanner\\bin\\sonar-scanner.bat ^
+                            -Dsonar.projectKey=TuyenKimHuynh_8.2CDevSecOps ^
+                            -Dsonar.organization=tuyenkimhuynh ^
+                            -Dsonar.host.url=https://sonarcloud.io ^
+                            -Dsonar.login=%SONAR_TOKEN% ^
+                            -Dsonar.sources=. ^
+                            -Dsonar.exclusions=node_modules/**,test/** ^
+                            -Dsonar.javascript.lcov.reportPaths=coverage/lcov.info
+                    """
+                }
+            }
+        }
     }
     
     post {
